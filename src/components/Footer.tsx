@@ -16,16 +16,16 @@ const footerLinks = {
     { label: "Contato", href: "/contato" },
   ],
   Recursos: [
-    { label: "Documentação", href: "#" },
-    { label: "API", href: "#" },
-    { label: "Guias", href: "#" },
-    { label: "Status", href: "#" },
+    { label: "Documentação", href: "/documentacao" },
+    { label: "API", href: "/api-docs" },
+    { label: "Guias", href: "/guias" },
+    { label: "Status", href: "/status" },
   ],
   Legal: [
-    { label: "Privacidade", href: "#" },
-    { label: "Termos", href: "#" },
-    { label: "LGPD", href: "#" },
-    { label: "Cookies", href: "#" },
+    { label: "Privacidade", href: "/privacidade" },
+    { label: "Termos", href: "/termos" },
+    { label: "LGPD", href: "/lgpd" },
+    { label: "Cookies", href: "/cookies" },
   ],
 };
 
@@ -73,13 +73,13 @@ export default function Footer() {
             reservados.
           </p>
           <div className="flex items-center gap-6">
-            <a href="#" className="text-xs text-text-muted hover:text-white transition-colors">
+            <a href="/privacidade" className="text-xs text-text-muted hover:text-white transition-colors">
               Privacidade
             </a>
-            <a href="#" className="text-xs text-text-muted hover:text-white transition-colors">
+            <a href="/termos" className="text-xs text-text-muted hover:text-white transition-colors">
               Termos
             </a>
-            <a href="#" className="text-xs text-text-muted hover:text-white transition-colors">
+            <a href="/lgpd" className="text-xs text-text-muted hover:text-white transition-colors">
               LGPD
             </a>
           </div>
