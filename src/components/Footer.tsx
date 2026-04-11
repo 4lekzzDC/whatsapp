@@ -3,10 +3,30 @@
 import { MessageCircle } from "lucide-react";
 
 const footerLinks = {
-  Produto: ["Funcionalidades", "Integrações", "Preços", "Changelog"],
-  Empresa: ["Sobre", "Blog", "Carreiras", "Contato"],
-  Recursos: ["Documentação", "API", "Guias", "Status"],
-  Legal: ["Privacidade", "Termos", "LGPD", "Cookies"],
+  Produto: [
+    { label: "Funcionalidades", href: "/funcionalidades" },
+    { label: "Integrações", href: "/integracoes" },
+    { label: "Preços", href: "/precos" },
+    { label: "Changelog", href: "/changelog" },
+  ],
+  Empresa: [
+    { label: "Sobre", href: "#" },
+    { label: "Blog", href: "#" },
+    { label: "Carreiras", href: "#" },
+    { label: "Contato", href: "#" },
+  ],
+  Recursos: [
+    { label: "Documentação", href: "#" },
+    { label: "API", href: "#" },
+    { label: "Guias", href: "#" },
+    { label: "Status", href: "#" },
+  ],
+  Legal: [
+    { label: "Privacidade", href: "#" },
+    { label: "Termos", href: "#" },
+    { label: "LGPD", href: "#" },
+    { label: "Cookies", href: "#" },
+  ],
 };
 
 export default function Footer() {
@@ -16,7 +36,7 @@ export default function Footer() {
         <div className="grid grid-cols-2 md:grid-cols-5 gap-8 mb-12">
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
-            <a href="#" className="flex items-center gap-2 mb-4">
+            <a href="/" className="flex items-center gap-2 mb-4">
               <div className="w-9 h-9 rounded-xl bg-green-primary/20 flex items-center justify-center">
                 <MessageCircle className="w-5 h-5 text-green-primary" />
               </div>
@@ -33,12 +53,12 @@ export default function Footer() {
               <h4 className="text-sm font-semibold text-white mb-4">{title}</h4>
               <ul className="space-y-2.5">
                 {links.map((link) => (
-                  <li key={link}>
+                  <li key={link.label}>
                     <a
-                      href="#"
+                      href={link.href}
                       className="text-sm text-text-muted hover:text-white transition-colors"
                     >
-                      {link}
+                      {link.label}
                     </a>
                   </li>
                 ))}
