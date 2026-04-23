@@ -15,6 +15,8 @@ import {
   User,
   Settings,
 } from "lucide-react";
+import { sair } from "@/app/entrar/actions";
+import { useUser } from "./UserProvider";
 
 const sections = [
   { href: "/painel/atendimentos", label: "Atendimentos" },
@@ -27,6 +29,7 @@ export default function Topbar({ currentLabel = "Atendimentos" }: { currentLabel
   const [openSections, setOpenSections] = useState(false);
   const [openProfile, setOpenProfile] = useState(false);
   const [dark, setDark] = useState(true);
+  const user = useUser();
 
   return (
     <header className="sticky top-0 z-40 h-16 border-b border-white/5 bg-card-bg/70 backdrop-blur-md flex items-center px-4 lg:px-6 gap-3">
@@ -96,15 +99,15 @@ export default function Topbar({ currentLabel = "Atendimentos" }: { currentLabel
             className="flex items-center gap-2 pl-1 pr-2 py-1 rounded-lg hover:bg-white/[0.04]"
           >
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-primary to-green-dark flex items-center justify-center text-black text-xs font-bold">
-              AM
+              {user.initials}
             </div>
             <ChevronDown className="w-3.5 h-3.5 text-text-muted" />
           </button>
           {openProfile && (
             <div className="absolute right-0 mt-2 w-56 glass-card rounded-xl border border-white/10 shadow-2xl p-1.5 z-50">
               <div className="px-3 py-2 border-b border-white/5 mb-1">
-                <p className="text-sm font-medium">Alexandre Marin</p>
-                <p className="text-xs text-text-muted">admin@empresa.com</p>
+                <p className="text-sm font-medium truncate">{user.name}</p>
+                <p className="text-xs text-text-muted truncate">{user.email}</p>
               </div>
               <Link
                 href="/painel/perfil"
@@ -125,12 +128,14 @@ export default function Topbar({ currentLabel = "Atendimentos" }: { currentLabel
                 <HelpCircle className="w-4 h-4" /> Ajuda
               </Link>
               <div className="my-1 border-t border-white/5" />
-              <Link
-                href="/"
-                className="flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 rounded-lg"
-              >
-                <LogOut className="w-4 h-4" /> Sair
-              </Link>
+              <form action={sair}>
+                <button
+                  type="submit"
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 rounded-lg"
+                >
+                  <LogOut className="w-4 h-4" /> Sair
+                </button>
+              </form>
             </div>
           )}
         </div>
