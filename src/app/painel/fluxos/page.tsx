@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Plus, Workflow, Play, Pause, Edit2, Copy, Trash2, ArrowRight } from "lucide-react";
 import Topbar from "@/components/painel/Topbar";
 import PageHeader from "@/components/painel/PageHeader";
@@ -40,9 +41,12 @@ export default function FluxosPage() {
           title="Fluxos automáticos"
           description="Desenhe conversas com gatilhos, condições e respostas dinâmicas. Publique em poucos cliques."
           actions={
-            <button className="inline-flex items-center gap-2 bg-green-primary hover:bg-green-primary/90 text-black font-semibold px-4 py-2 rounded-lg text-sm">
+            <Link
+              href="/painel/fluxos/editor"
+              className="inline-flex items-center gap-2 bg-green-primary hover:bg-green-primary/90 text-black font-semibold px-4 py-2 rounded-lg text-sm"
+            >
               <Plus className="w-4 h-4" /> Novo fluxo
-            </button>
+            </Link>
           }
         />
 
@@ -75,9 +79,12 @@ export default function FluxosPage() {
               </div>
 
               <div className="flex items-center gap-1 mt-3">
-                <button className="flex-1 inline-flex items-center justify-center gap-1.5 text-xs bg-white/[0.04] hover:bg-white/[0.06] py-1.5 rounded">
+                <Link
+                  href="/painel/fluxos/editor"
+                  className="flex-1 inline-flex items-center justify-center gap-1.5 text-xs bg-white/[0.04] hover:bg-white/[0.06] py-1.5 rounded"
+                >
                   <Edit2 className="w-3.5 h-3.5" /> Editar
-                </button>
+                </Link>
                 <button className="p-1.5 rounded hover:bg-white/[0.04] text-text-muted hover:text-white">
                   {f.active ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
                 </button>
