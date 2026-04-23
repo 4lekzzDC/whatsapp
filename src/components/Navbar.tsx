@@ -38,16 +38,16 @@ export default function Navbar() {
 
           <div className="hidden md:flex items-center gap-3">
             <a
-              href="#pricing"
+              href="/painel"
               className="text-sm text-text-muted hover:text-white transition-colors px-4 py-2"
             >
-              Login
+              Entrar
             </a>
             <a
-              href="#cta"
+              href="/painel"
               className="text-sm bg-green-primary hover:bg-green-primary/90 text-black font-semibold px-5 py-2.5 rounded-xl transition-all hover:shadow-lg hover:shadow-green-primary/25"
             >
-              Começar Grátis
+              Acessar painel
             </a>
           </div>
 
@@ -73,11 +73,11 @@ export default function Navbar() {
             </a>
           ))}
           <a
-            href="#cta"
+            href="/painel"
             onClick={() => setMobileOpen(false)}
             className="block text-sm bg-green-primary hover:bg-green-primary/90 text-black font-semibold px-5 py-2.5 rounded-xl text-center transition-all mt-3"
           >
-            Começar Grátis
+            Acessar painel
           </a>
         </div>
       )}
