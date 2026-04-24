@@ -4,6 +4,8 @@ import Link from "next/link";
 import { Plus, Workflow, Play, Pause, Edit2, Copy, Trash2, ArrowRight } from "lucide-react";
 import Topbar from "@/components/painel/Topbar";
 import PageHeader from "@/components/painel/PageHeader";
+import { useToast } from "@/components/painel/ToastProvider";
+import { useConfirm } from "@/components/painel/ConfirmProvider";
 
 const flows = [
   {
@@ -33,6 +35,27 @@ const flows = [
 ];
 
 export default function FluxosPage() {
+  const toast = useToast();
+  const confirm = useConfirm();
+
+  async function remove(name: string) {
+    const ok = await confirm({
+      title: `Excluir fluxo "${name}"?`,
+      description: "Ao excluir, mensagens que dependiam dele deixam de ser respondidas automaticamente.",
+      destructive: true,
+      confirmLabel: "Excluir",
+    });
+    if (ok) toast.success("Fluxo excluído");
+  }
+
+  function togglePause(name: string, active: boolean) {
+    toast.info(active ? "Fluxo pausado" : "Fluxo ativado", name);
+  }
+
+  function duplicate(name: string) {
+    toast.success("Fluxo duplicado", `"${name} (cópia)" está como rascunho.`);
+  }
+
   return (
     <>
       <Topbar currentLabel="Fluxos" />
@@ -85,13 +108,25 @@ export default function FluxosPage() {
                 >
                   <Edit2 className="w-3.5 h-3.5" /> Editar
                 </Link>
-                <button className="p-1.5 rounded hover:bg-white/[0.04] text-text-muted hover:text-white">
+                <button
+                  onClick={() => togglePause(f.name, f.active)}
+                  className="p-1.5 rounded hover:bg-white/[0.04] text-text-muted hover:text-white"
+                  title={f.active ? "Pausar" : "Ativar"}
+                >
                   {f.active ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
                 </button>
-                <button className="p-1.5 rounded hover:bg-white/[0.04] text-text-muted hover:text-white">
+                <button
+                  onClick={() => duplicate(f.name)}
+                  className="p-1.5 rounded hover:bg-white/[0.04] text-text-muted hover:text-white"
+                  title="Duplicar"
+                >
                   <Copy className="w-4 h-4" />
                 </button>
-                <button className="p-1.5 rounded hover:bg-red-500/10 text-red-400">
+                <button
+                  onClick={() => remove(f.name)}
+                  className="p-1.5 rounded hover:bg-red-500/10 text-red-400"
+                  title="Excluir"
+                >
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>

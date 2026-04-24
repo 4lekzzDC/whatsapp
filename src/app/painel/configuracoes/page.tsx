@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import Topbar from "@/components/painel/Topbar";
 import PageHeader from "@/components/painel/PageHeader";
+import { useToast } from "@/components/painel/ToastProvider";
 
 type Section =
   | "empresa"
@@ -175,9 +176,13 @@ function Toggle({
 }
 
 function SaveBar() {
+  const toast = useToast();
   return (
     <div className="flex justify-end">
-      <button className="inline-flex items-center gap-2 bg-green-primary hover:bg-green-primary/90 text-black font-semibold px-4 py-2 rounded-lg text-sm">
+      <button
+        onClick={() => toast.success("Configurações salvas", "As alterações já estão ativas.")}
+        className="inline-flex items-center gap-2 bg-green-primary hover:bg-green-primary/90 text-black font-semibold px-4 py-2 rounded-lg text-sm"
+      >
         <Save className="w-4 h-4" /> Salvar alterações
       </button>
     </div>

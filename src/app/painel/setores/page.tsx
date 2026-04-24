@@ -3,6 +3,8 @@
 import { Plus, Users, MessageSquare, Edit2, Trash2, Clock } from "lucide-react";
 import Topbar from "@/components/painel/Topbar";
 import PageHeader from "@/components/painel/PageHeader";
+import { useToast } from "@/components/painel/ToastProvider";
+import { useConfirm } from "@/components/painel/ConfirmProvider";
 
 const sectors = [
   {
@@ -44,6 +46,22 @@ const sectors = [
 ];
 
 export default function SetoresPage() {
+  const toast = useToast();
+  const confirm = useConfirm();
+
+  async function del(name: string, tickets: number) {
+    const ok = await confirm({
+      title: `Excluir setor "${name}"?`,
+      description:
+        tickets > 0
+          ? `Há ${tickets} atendimento(s) aberto(s). Serão reatribuídos automaticamente.`
+          : "Esta ação não pode ser desfeita.",
+      destructive: true,
+      confirmLabel: "Excluir",
+    });
+    if (ok) toast.success("Setor removido", `"${name}" foi excluído.`);
+  }
+
   return (
     <>
       <Topbar currentLabel="Setores" />
@@ -52,7 +70,10 @@ export default function SetoresPage() {
           title="Setores"
           description="Crie filas de atendimento por área. Cada setor pode ter saudação, operadores e conexões próprias."
           actions={
-            <button className="inline-flex items-center gap-2 bg-green-primary hover:bg-green-primary/90 text-black font-semibold px-4 py-2 rounded-lg text-sm">
+            <button
+              onClick={() => toast.info("Em breve", "Criação de setor abre um modal com formulário.")}
+              className="inline-flex items-center gap-2 bg-green-primary hover:bg-green-primary/90 text-black font-semibold px-4 py-2 rounded-lg text-sm"
+            >
               <Plus className="w-4 h-4" /> Novo setor
             </button>
           }
@@ -78,7 +99,10 @@ export default function SetoresPage() {
                   <button className="p-1.5 rounded hover:bg-white/[0.04] text-text-muted hover:text-white">
                     <Edit2 className="w-4 h-4" />
                   </button>
-                  <button className="p-1.5 rounded hover:bg-red-500/10 text-red-400">
+                  <button
+                    onClick={() => del(s.name, s.openTickets)}
+                    className="p-1.5 rounded hover:bg-red-500/10 text-red-400"
+                  >
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </div>

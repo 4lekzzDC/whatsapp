@@ -16,6 +16,8 @@ import {
   UserPlus,
   CircleDot,
 } from "lucide-react";
+import { useToast } from "./ToastProvider";
+import { useConfirm } from "./ConfirmProvider";
 
 export type Message = {
   id: number;
@@ -44,6 +46,17 @@ export default function ConversationPanel({
   const [draft, setDraft] = useState("");
   const [messages, setMessages] = useState<Message[]>(conv.messages);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const toast = useToast();
+  const confirm = useConfirm();
+
+  async function resolve() {
+    const ok = await confirm({
+      title: "Resolver atendimento?",
+      description: `O ticket de ${conv.contact.name} será movido para "Resolvidos" e o cliente receberá a pesquisa de satisfação.`,
+      confirmLabel: "Resolver",
+    });
+    if (ok) toast.success("Atendimento resolvido", "CSAT enviado ao cliente.");
+  }
 
   useEffect(() => {
     setMessages(conv.messages);
@@ -181,7 +194,10 @@ export default function ConversationPanel({
         <span className="inline-flex items-center gap-1 bg-yellow-400/20 text-yellow-300 px-2 py-0.5 rounded">
           <Tag className="w-3 h-3" /> {conv.tag}
         </span>
-        <button className="ml-auto text-green-primary hover:underline whitespace-nowrap">
+        <button
+          onClick={resolve}
+          className="ml-auto text-green-primary hover:underline whitespace-nowrap"
+        >
           Resolver atendimento
         </button>
       </div>

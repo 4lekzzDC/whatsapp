@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import Sidebar from "@/components/painel/Sidebar";
 import { UserProvider } from "@/components/painel/UserProvider";
+import { ToastProvider } from "@/components/painel/ToastProvider";
+import { ConfirmProvider } from "@/components/painel/ConfirmProvider";
 import { getSession } from "@/lib/session";
 
 export const metadata: Metadata = {
@@ -35,10 +37,14 @@ export default async function PainelLayout({
 
   return (
     <UserProvider user={user}>
-      <div className="flex min-h-screen">
-        <Sidebar />
-        <div className="flex-1 flex flex-col min-w-0">{children}</div>
-      </div>
+      <ToastProvider>
+        <ConfirmProvider>
+          <div className="flex min-h-screen">
+            <Sidebar />
+            <div className="flex-1 flex flex-col min-w-0">{children}</div>
+          </div>
+        </ConfirmProvider>
+      </ToastProvider>
     </UserProvider>
   );
 }

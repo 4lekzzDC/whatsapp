@@ -17,7 +17,10 @@ import {
   Tag,
   Clock,
   Webhook,
+  Keyboard,
 } from "lucide-react";
+import { useToast } from "@/components/painel/ToastProvider";
+import { useConfirm } from "@/components/painel/ConfirmProvider";
 
 type NodeType =
   | "trigger"
@@ -102,6 +105,8 @@ export default function FlowEditorPage() {
   const [connectingFrom, setConnectingFrom] = useState<string | null>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
   const dragging = useRef<{ id: string; dx: number; dy: number } | null>(null);
+  const toast = useToast();
+  const confirm = useConfirm();
 
   const selected = useMemo(
     () => nodes.find((n) => n.id === selectedId) ?? null,
@@ -151,12 +156,28 @@ export default function FlowEditorPage() {
     };
     setNodes((prev) => [...prev, base]);
     setSelectedId(base.id);
+    toast.info("Bloco adicionado", `${nodeMeta[type].label} pronto para configurar.`);
   }
 
-  function deleteNode(id: string) {
+  async function deleteNode(id: string) {
+    const node = nodes.find((n) => n.id === id);
+    const ok = await confirm({
+      title: "Excluir bloco?",
+      description: node
+        ? `"${node.data.label}" e suas conexões serão removidos do fluxo.`
+        : "As conexões também serão removidas.",
+      destructive: true,
+      confirmLabel: "Excluir",
+    });
+    if (!ok) return;
     setNodes((prev) => prev.filter((n) => n.id !== id));
     setEdges((prev) => prev.filter((e) => e.from !== id && e.to !== id));
     setSelectedId(null);
+    toast.success("Bloco removido");
+  }
+
+  function save() {
+    toast.success("Fluxo salvo", `${nodes.length} blocos e ${edges.length} conexões.`);
   }
 
   function onPortClick(nodeId: string, kind: "out" | "in") {
@@ -169,6 +190,7 @@ export default function FlowEditorPage() {
         ...prev.filter((e) => !(e.from === connectingFrom && e.to === nodeId)),
         { id: uid("e"), from: connectingFrom, to: nodeId },
       ]);
+      toast.success("Conexão criada");
     }
     setConnectingFrom(null);
   }
@@ -186,6 +208,35 @@ export default function FlowEditorPage() {
       window.removeEventListener("pointerup", onPointerUp);
     };
   }, [onPointerMove, onPointerUp]);
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      const target = e.target as HTMLElement | null;
+      const typing =
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable);
+
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s") {
+        e.preventDefault();
+        save();
+        return;
+      }
+      if (typing) return;
+      if (e.key === "Escape") {
+        setSelectedId(null);
+        setConnectingFrom(null);
+      }
+      if ((e.key === "Delete" || e.key === "Backspace") && selectedId) {
+        e.preventDefault();
+        deleteNode(selectedId);
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedId, nodes, edges]);
 
   // Dimensões do canvas
   const width = Math.max(1400, ...nodes.map((n) => n.x + NODE_W + 200));
@@ -210,10 +261,17 @@ export default function FlowEditorPage() {
           <span className="w-1.5 h-1.5 rounded-full bg-green-primary" /> Publicado
         </span>
         <div className="ml-auto flex items-center gap-2">
-          <button className="inline-flex items-center gap-1.5 border border-white/10 hover:border-white/20 text-white/80 text-sm px-3 py-1.5 rounded-lg">
+          <button
+            onClick={() => toast.info("Modo de teste", "Digite 'oi' para ver o fluxo responder.")}
+            className="inline-flex items-center gap-1.5 border border-white/10 hover:border-white/20 text-white/80 text-sm px-3 py-1.5 rounded-lg"
+          >
             <Play className="w-3.5 h-3.5" /> Testar
           </button>
-          <button className="inline-flex items-center gap-1.5 bg-green-primary hover:bg-green-primary/90 text-black font-semibold text-sm px-3 py-1.5 rounded-lg">
+          <button
+            onClick={save}
+            className="inline-flex items-center gap-1.5 bg-green-primary hover:bg-green-primary/90 text-black font-semibold text-sm px-3 py-1.5 rounded-lg"
+            title="Salvar (Ctrl/Cmd + S)"
+          >
             <Save className="w-3.5 h-3.5" /> Salvar
           </button>
         </div>
@@ -257,8 +315,25 @@ export default function FlowEditorPage() {
             </p>
             <ul className="space-y-1 list-disc pl-4">
               <li>Arraste um nó para mover.</li>
-              <li>Clique no ponto verde à direita de um nó e depois no ponto azul de outro para conectar.</li>
-              <li>Selecione um nó para editar no painel da direita.</li>
+              <li>Clique no ponto verde à direita e depois no azul de outro nó para conectar.</li>
+              <li>Selecione um nó para editar à direita.</li>
+            </ul>
+          </div>
+
+          <div className="mt-3 bg-white/[0.03] border border-white/[0.06] rounded-xl p-3 text-[11px] text-text-muted">
+            <p className="text-white/80 font-medium mb-2 flex items-center gap-1">
+              <Keyboard className="w-3 h-3" /> Atalhos
+            </p>
+            <ul className="space-y-1.5">
+              <li className="flex items-center justify-between">
+                Salvar <kbd className="text-[10px] font-mono bg-white/[0.06] border border-white/10 rounded px-1.5 py-0.5">⌘S</kbd>
+              </li>
+              <li className="flex items-center justify-between">
+                Excluir selecionado <kbd className="text-[10px] font-mono bg-white/[0.06] border border-white/10 rounded px-1.5 py-0.5">Del</kbd>
+              </li>
+              <li className="flex items-center justify-between">
+                Desselecionar <kbd className="text-[10px] font-mono bg-white/[0.06] border border-white/10 rounded px-1.5 py-0.5">Esc</kbd>
+              </li>
             </ul>
           </div>
         </aside>

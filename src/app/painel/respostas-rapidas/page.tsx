@@ -4,6 +4,8 @@ import { useState } from "react";
 import { Plus, Zap, Copy, Edit2, Trash2, Search } from "lucide-react";
 import Topbar from "@/components/painel/Topbar";
 import PageHeader from "@/components/painel/PageHeader";
+import { useToast } from "@/components/painel/ToastProvider";
+import { useConfirm } from "@/components/painel/ConfirmProvider";
 
 const replies = [
   {
@@ -38,6 +40,24 @@ const replies = [
 
 export default function RespostasRapidasPage() {
   const [q, setQ] = useState("");
+  const toast = useToast();
+  const confirm = useConfirm();
+
+  async function remove(title: string, shortcut: string) {
+    const ok = await confirm({
+      title: "Excluir resposta rápida?",
+      description: `${shortcut} — "${title}"`,
+      destructive: true,
+      confirmLabel: "Excluir",
+    });
+    if (ok) toast.success("Resposta excluída");
+  }
+
+  function copy(shortcut: string, body: string) {
+    navigator.clipboard?.writeText(body).catch(() => {});
+    toast.success("Copiada", `${shortcut} pronto para colar.`);
+  }
+
   const list = replies.filter(
     (r) =>
       r.title.toLowerCase().includes(q.toLowerCase()) ||
@@ -80,9 +100,23 @@ export default function RespostasRapidasPage() {
                   <h3 className="font-semibold mt-2">{r.title}</h3>
                 </div>
                 <div className="flex items-center gap-1">
-                  <button className="p-1.5 rounded hover:bg-white/[0.04] text-text-muted hover:text-white"><Copy className="w-4 h-4" /></button>
-                  <button className="p-1.5 rounded hover:bg-white/[0.04] text-text-muted hover:text-white"><Edit2 className="w-4 h-4" /></button>
-                  <button className="p-1.5 rounded hover:bg-red-500/10 text-red-400"><Trash2 className="w-4 h-4" /></button>
+                  <button
+                    onClick={() => copy(r.shortcut, r.body)}
+                    className="p-1.5 rounded hover:bg-white/[0.04] text-text-muted hover:text-white"
+                    title="Copiar"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </button>
+                  <button className="p-1.5 rounded hover:bg-white/[0.04] text-text-muted hover:text-white" title="Editar">
+                    <Edit2 className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => remove(r.title, r.shortcut)}
+                    className="p-1.5 rounded hover:bg-red-500/10 text-red-400"
+                    title="Excluir"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
               <p className="text-sm text-white/75 leading-relaxed whitespace-pre-wrap">{r.body}</p>

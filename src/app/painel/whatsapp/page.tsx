@@ -17,6 +17,8 @@ import {
 } from "lucide-react";
 import Topbar from "@/components/painel/Topbar";
 import PageHeader from "@/components/painel/PageHeader";
+import { useToast } from "@/components/painel/ToastProvider";
+import { useConfirm } from "@/components/painel/ConfirmProvider";
 
 type ConnStatus = "connected" | "disconnected" | "qr";
 
@@ -86,8 +88,30 @@ function statusBadge(status: ConnStatus) {
 }
 
 export default function WhatsAppPage() {
-  const [connections] = useState(initialConnections);
+  const [connections, setConnections] = useState(initialConnections);
   const [showQr, setShowQr] = useState(false);
+  const toast = useToast();
+  const confirm = useConfirm();
+
+  async function removeConnection(id: number) {
+    const c = connections.find((x) => x.id === id);
+    const ok = await confirm({
+      title: "Excluir conexão?",
+      description: c
+        ? `O número ${c.phone} (${c.name}) será desvinculado. Tickets em andamento não serão afetados.`
+        : undefined,
+      destructive: true,
+      confirmLabel: "Excluir",
+    });
+    if (!ok) return;
+    setConnections((prev) => prev.filter((x) => x.id !== id));
+    toast.success("Conexão removida");
+  }
+
+  function restart(id: number) {
+    const c = connections.find((x) => x.id === id);
+    toast.info("Reiniciando…", c ? `Socket de ${c.name} será reconectado.` : undefined);
+  }
 
   return (
     <>
@@ -180,6 +204,7 @@ export default function WhatsAppPage() {
                     </button>
                   ) : (
                     <button
+                      onClick={() => restart(c.id)}
                       className="p-2 rounded-lg hover:bg-white/[0.04] text-text-muted hover:text-white"
                       title="Reiniciar"
                     >
@@ -187,12 +212,14 @@ export default function WhatsAppPage() {
                     </button>
                   )}
                   <button
+                    onClick={() => toast.info("Sessão encerrada", `${c.name} ficará offline.`)}
                     className="p-2 rounded-lg hover:bg-white/[0.04] text-text-muted hover:text-white"
                     title="Desligar"
                   >
                     <Power className="w-4 h-4" />
                   </button>
                   <button
+                    onClick={() => removeConnection(c.id)}
                     className="p-2 rounded-lg hover:bg-red-500/10 text-red-400"
                     title="Excluir"
                   >
