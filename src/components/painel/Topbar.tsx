@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { sair } from "@/app/entrar/actions";
 import { useUser } from "./UserProvider";
+import { useCommandPalette } from "./CommandPalette";
 
 const sections = [
   { href: "/painel/atendimentos", label: "Atendimentos" },
@@ -30,6 +31,7 @@ export default function Topbar({ currentLabel = "Atendimentos" }: { currentLabel
   const [openProfile, setOpenProfile] = useState(false);
   const [dark, setDark] = useState(true);
   const user = useUser();
+  const palette = useCommandPalette();
 
   return (
     <header className="sticky top-0 z-40 h-16 border-b border-white/5 bg-card-bg/70 backdrop-blur-md flex items-center px-4 lg:px-6 gap-3">
@@ -62,14 +64,16 @@ export default function Topbar({ currentLabel = "Atendimentos" }: { currentLabel
       </div>
 
       <div className="hidden md:flex items-center flex-1 max-w-md mx-auto">
-        <div className="relative w-full">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
-          <input
-            type="text"
-            placeholder="Buscar contatos, atendimentos..."
-            className="w-full bg-white/[0.04] border border-white/[0.06] rounded-lg pl-9 pr-3 py-2 text-sm placeholder:text-text-muted focus:outline-none focus:border-green-primary/40"
-          />
-        </div>
+        <button
+          onClick={palette.open}
+          className="group relative w-full flex items-center gap-2 bg-white/[0.04] hover:bg-white/[0.06] border border-white/[0.06] rounded-lg px-3 py-2 text-sm text-left"
+        >
+          <Search className="w-4 h-4 text-text-muted" />
+          <span className="text-text-muted flex-1">Buscar ou executar…</span>
+          <kbd className="text-[10px] font-mono bg-white/[0.06] border border-white/10 rounded px-1.5 py-0.5 text-text-muted">
+            ⌘K
+          </kbd>
+        </button>
       </div>
 
       <div className="flex items-center gap-1 ml-auto">

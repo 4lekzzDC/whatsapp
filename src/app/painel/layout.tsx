@@ -4,6 +4,7 @@ import Sidebar from "@/components/painel/Sidebar";
 import { UserProvider } from "@/components/painel/UserProvider";
 import { ToastProvider } from "@/components/painel/ToastProvider";
 import { ConfirmProvider } from "@/components/painel/ConfirmProvider";
+import { CommandPaletteProvider } from "@/components/painel/CommandPalette";
 import { getSession } from "@/lib/session";
 
 export const metadata: Metadata = {
@@ -39,10 +40,12 @@ export default async function PainelLayout({
     <UserProvider user={user}>
       <ToastProvider>
         <ConfirmProvider>
-          <div className="flex min-h-screen">
-            <Sidebar />
-            <div className="flex-1 flex flex-col min-w-0">{children}</div>
-          </div>
+          <CommandPaletteProvider>
+            <div className="flex min-h-screen">
+              <Sidebar />
+              <div className="flex-1 flex flex-col min-w-0">{children}</div>
+            </div>
+          </CommandPaletteProvider>
         </ConfirmProvider>
       </ToastProvider>
     </UserProvider>
