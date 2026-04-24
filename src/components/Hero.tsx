@@ -2,8 +2,10 @@
 
 import { MessageCircle, ArrowRight } from "lucide-react";
 import DashboardMockup from "./DashboardMockup";
+import { useT } from "./LocaleProvider";
 
 export default function Hero() {
+  const t = useT();
   return (
     <section className="relative min-h-screen flex items-center pt-16 overflow-hidden">
       {/* Background effects */}
@@ -19,31 +21,28 @@ export default function Hero() {
           <div className="space-y-8 animate-slide-up">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-primary/10 border border-green-primary/20">
               <MessageCircle className="w-4 h-4 text-green-primary" />
-              <span className="text-sm text-green-primary font-medium">
-                Atendimento inteligente via WhatsApp
-              </span>
+              <span className="text-sm text-green-primary font-medium">{t("hero.badge")}</span>
             </div>
 
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight">
-              <span className="gradient-text">WhatsApp Bot</span>
+              <span className="gradient-text">{t("hero.title.line1")}</span>
               <br />
-              <span className="text-white/90">para atendimento</span>
+              <span className="text-white/90">{t("hero.title.line2")}</span>
               <br />
-              <span className="text-white/90">automatizado</span>
+              <span className="text-white/90">{t("hero.title.line3")}</span>
             </h1>
 
             <p className="text-lg text-text-muted max-w-lg leading-relaxed">
-              Sistema de atendimento via WhatsApp que categoriza conversas, realiza o
-              pré-atendimento e organiza o fluxo antes da interação humana.
+              {t("hero.description")}
             </p>
 
             <ul className="space-y-3">
               {[
-                "Atendimento automatizado 24/7",
-                "Categorização por intenção (NLP)",
-                "Pré-atendimento e triagem inteligente",
-                "Transferência fluida para humanos",
-                "Relatórios de atendimento e métricas",
+                t("hero.bullet.inbox"),
+                t("hero.bullet.anywhere"),
+                t("hero.bullet.outbound"),
+                t("hero.bullet.quickReplies"),
+                t("hero.bullet.ai"),
               ].map((item) => (
                 <li key={item} className="flex items-center gap-3">
                   <div className="w-5 h-5 rounded-full bg-green-primary/20 flex items-center justify-center shrink-0">
@@ -54,11 +53,7 @@ export default function Hero() {
                       stroke="currentColor"
                       strokeWidth={3}
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M5 13l4 4L19 7"
-                      />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
                   </div>
                   <span className="text-sm text-white/80">{item}</span>
@@ -68,22 +63,22 @@ export default function Hero() {
 
             <div className="flex flex-col sm:flex-row gap-4">
               <a
-                href="#cta"
+                href="/cadastro"
                 className="inline-flex items-center justify-center gap-2 bg-green-primary hover:bg-green-primary/90 text-black font-semibold px-7 py-3.5 rounded-xl text-base transition-all hover:shadow-lg hover:shadow-green-primary/25 hover:scale-[1.02]"
               >
-                Começar Agora
+                {t("hero.cta.primary")}
                 <ArrowRight className="w-4 h-4" />
               </a>
               <a
                 href="#how-it-works"
                 className="inline-flex items-center justify-center gap-2 border border-white/10 hover:border-white/20 text-white/80 hover:text-white font-medium px-7 py-3.5 rounded-xl text-base transition-all hover:bg-white/5"
               >
-                Como Funciona
+                {t("hero.cta.secondary")}
               </a>
             </div>
 
             <div className="flex flex-wrap gap-2 pt-2">
-              {["Chatbot", "WhatsApp API", "NLP"].map((tag) => (
+              {[t("hero.tag.inbox"), t("hero.tag.scheduling"), t("hero.tag.ai")].map((tag) => (
                 <span
                   key={tag}
                   className="text-xs px-3 py-1.5 rounded-lg bg-white/[0.05] border border-white/10 text-text-muted"

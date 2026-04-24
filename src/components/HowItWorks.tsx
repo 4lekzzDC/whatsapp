@@ -1,35 +1,36 @@
 "use client";
 
-import { MessageCircle, Brain, GitBranch, UserCheck } from "lucide-react";
+import { MessageCircle, Inbox, Send, Sparkles } from "lucide-react";
 
 const steps = [
   {
     icon: MessageCircle,
     number: "01",
-    title: "Cliente envia mensagem",
+    title: "Conecte seu WhatsApp",
     description:
-      "O cliente entra em contato via WhatsApp e é recebido instantaneamente pelo bot de atendimento.",
+      "Escaneie o QR Code e vincule um ou mais números. Cada número pode ser direcionado a um setor.",
   },
   {
-    icon: Brain,
+    icon: Inbox,
     number: "02",
-    title: "NLP analisa a intenção",
+    title: "Todas as conversas organizadas",
     description:
-      "O sistema de NLP processa a mensagem, identifica a intenção e categoriza automaticamente o assunto.",
+      "Caixa de entrada compartilhada por setor, com tags, respostas rápidas e histórico completo do cliente.",
   },
   {
-    icon: GitBranch,
+    icon: Send,
     number: "03",
-    title: "Pré-atendimento automático",
+    title: "Atenda e dispare mensagens",
     description:
-      "O bot coleta informações necessárias, responde dúvidas comuns e realiza triagem inteligente.",
+      "Responda de qualquer lugar, em equipe, e agende campanhas, lembretes e respostas automáticas.",
   },
   {
-    icon: UserCheck,
+    icon: Sparkles,
     number: "04",
-    title: "Resolução ou transferência",
+    title: "Ative a IA quando quiser",
     description:
-      "O atendimento é resolvido automaticamente ou transferido para um humano com todo o contexto.",
+      "Ligue o add-on de IA e o bot começa a entender e resolver conversas sozinho, chamando o humano só quando preciso.",
+    addon: true,
   },
 ];
 
@@ -42,35 +43,45 @@ export default function HowItWorks() {
             Como Funciona
           </span>
           <h2 className="text-3xl sm:text-4xl font-bold mt-3 mb-4">
-            Simples de usar,{" "}
-            <span className="gradient-text">poderoso nos resultados</span>
+            Rápido de começar, <span className="gradient-text">fácil de operar</span>
           </h2>
           <p className="text-text-muted max-w-2xl mx-auto text-lg">
-            Do primeiro contato à resolução, o processo é 100% automatizado e
-            inteligente.
+            Do primeiro QR Code até o atendimento em escala, em quatro passos.
           </p>
         </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 relative">
-          {/* Connecting line (desktop) */}
           <div className="hidden lg:block absolute top-16 left-[12.5%] right-[12.5%] h-px bg-gradient-to-r from-green-primary/20 via-green-primary/40 to-green-primary/20" />
 
           {steps.map((step) => {
             const Icon = step.icon;
             return (
               <div key={step.number} className="relative text-center group">
-                <div className="relative mx-auto w-16 h-16 rounded-2xl bg-green-primary/10 border border-green-primary/20 flex items-center justify-center mb-6 group-hover:bg-green-primary/20 transition-all">
-                  <Icon className="w-7 h-7 text-green-primary" />
-                  <span className="absolute -top-2 -right-2 text-[10px] font-bold bg-green-primary text-black w-6 h-6 rounded-full flex items-center justify-center">
+                <div
+                  className={`relative mx-auto w-16 h-16 rounded-2xl border flex items-center justify-center mb-6 transition-all ${
+                    step.addon
+                      ? "bg-accent-purple/10 border-accent-purple/20 group-hover:bg-accent-purple/20"
+                      : "bg-green-primary/10 border-green-primary/20 group-hover:bg-green-primary/20"
+                  }`}
+                >
+                  <Icon
+                    className={`w-7 h-7 ${step.addon ? "text-accent-purple" : "text-green-primary"}`}
+                  />
+                  <span
+                    className={`absolute -top-2 -right-2 text-[10px] font-bold w-6 h-6 rounded-full flex items-center justify-center ${
+                      step.addon ? "bg-accent-purple text-white" : "bg-green-primary text-black"
+                    }`}
+                  >
                     {step.number}
                   </span>
                 </div>
-                <h3 className="text-base font-semibold text-white mb-2">
-                  {step.title}
-                </h3>
-                <p className="text-sm text-text-muted leading-relaxed">
-                  {step.description}
-                </p>
+                <h3 className="text-base font-semibold text-white mb-2">{step.title}</h3>
+                {step.addon && (
+                  <span className="inline-block text-[10px] font-semibold bg-accent-purple/15 text-accent-purple px-2 py-0.5 rounded-full uppercase tracking-wider mb-2">
+                    Add-on opcional
+                  </span>
+                )}
+                <p className="text-sm text-text-muted leading-relaxed">{step.description}</p>
               </div>
             );
           })}

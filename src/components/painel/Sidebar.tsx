@@ -17,43 +17,45 @@ import {
   BookOpen,
   ChevronRight,
 } from "lucide-react";
-
-const nav = [
-  {
-    section: "Operação",
-    items: [
-      { href: "/painel/atendimentos", label: "Atendimentos", icon: Inbox, badge: "3" },
-      { href: "/painel/contatos", label: "Contatos", icon: Users },
-      { href: "/painel/campanhas", label: "Campanhas", icon: Megaphone },
-    ],
-  },
-  {
-    section: "Automação",
-    items: [
-      { href: "/painel/fluxos", label: "Fluxos", icon: Workflow },
-      { href: "/painel/respostas-rapidas", label: "Respostas rápidas", icon: Zap },
-    ],
-  },
-  {
-    section: "Gestão",
-    items: [
-      { href: "/painel/setores", label: "Setores", icon: Building2 },
-      { href: "/painel/usuarios", label: "Usuários", icon: UserCog },
-      { href: "/painel/relatorios", label: "Relatórios", icon: BarChart3 },
-    ],
-  },
-  {
-    section: "Sistema",
-    items: [
-      { href: "/painel/whatsapp", label: "Conexões WhatsApp", icon: Smartphone },
-      { href: "/painel/configuracoes", label: "Configurações", icon: Settings },
-      { href: "/painel/ajuda", label: "Central de Ajuda", icon: BookOpen },
-    ],
-  },
-];
+import { useT } from "../LocaleProvider";
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const t = useT();
+
+  const nav = [
+    {
+      section: t("panel.operation"),
+      items: [
+        { href: "/painel/atendimentos", label: t("panel.tickets"), icon: Inbox, badge: "3" },
+        { href: "/painel/contatos", label: t("panel.contacts"), icon: Users },
+        { href: "/painel/campanhas", label: t("panel.campaigns"), icon: Megaphone },
+      ],
+    },
+    {
+      section: t("panel.automation"),
+      items: [
+        { href: "/painel/fluxos", label: t("panel.flows"), icon: Workflow },
+        { href: "/painel/respostas-rapidas", label: t("panel.quickReplies"), icon: Zap },
+      ],
+    },
+    {
+      section: t("panel.management"),
+      items: [
+        { href: "/painel/setores", label: t("panel.sectors"), icon: Building2 },
+        { href: "/painel/usuarios", label: t("panel.users"), icon: UserCog },
+        { href: "/painel/relatorios", label: t("panel.reports"), icon: BarChart3 },
+      ],
+    },
+    {
+      section: t("panel.system"),
+      items: [
+        { href: "/painel/whatsapp", label: t("panel.connections"), icon: Smartphone },
+        { href: "/painel/configuracoes", label: t("panel.settings"), icon: Settings },
+        { href: "/painel/ajuda", label: t("panel.help"), icon: BookOpen },
+      ],
+    },
+  ];
 
   return (
     <aside className="hidden lg:flex w-64 shrink-0 flex-col border-r border-white/5 bg-card-bg/40">
@@ -63,7 +65,7 @@ export default function Sidebar() {
         </div>
         <div>
           <p className="text-sm font-bold leading-tight">WhatsApp Bot</p>
-          <p className="text-[10px] text-text-muted leading-tight">Painel do cliente</p>
+          <p className="text-[10px] text-text-muted leading-tight">{t("panel.customerPanel")}</p>
         </div>
       </Link>
 
@@ -106,18 +108,18 @@ export default function Sidebar() {
 
       <div className="border-t border-white/5 p-4">
         <div className="rounded-xl bg-gradient-to-br from-green-primary/15 to-green-dark/10 p-4 border border-green-primary/20">
-          <p className="text-xs font-semibold text-green-primary mb-1">Plano Pro</p>
+          <p className="text-xs font-semibold text-green-primary mb-1">{t("panel.planPro")}</p>
           <p className="text-[11px] text-white/70 leading-snug mb-3">
-            2.340 / 10.000 mensagens este mês
+            {t("panel.usageMsg", { used: "2.340", total: "10.000" })}
           </p>
           <div className="h-1.5 rounded-full bg-white/[0.08] overflow-hidden mb-3">
             <div className="h-full w-[23%] bg-green-primary rounded-full" />
           </div>
           <Link
-            href="/painel/configuracoes/plano"
+            href="/painel/configuracoes"
             className="block text-center text-[11px] font-semibold text-black bg-green-primary hover:bg-green-primary/90 rounded-lg py-1.5"
           >
-            Fazer upgrade
+            {t("panel.upgrade")}
           </Link>
         </div>
       </div>

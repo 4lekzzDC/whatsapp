@@ -2,16 +2,20 @@
 
 import { useState } from "react";
 import { MessageCircle, Menu, X } from "lucide-react";
-
-const navLinks = [
-  { href: "#features", label: "Funcionalidades" },
-  { href: "#how-it-works", label: "Como Funciona" },
-  { href: "#pricing", label: "Planos" },
-  { href: "#faq", label: "FAQ" },
-];
+import ThemeToggle from "./ThemeToggle";
+import LanguageSwitcher from "./LanguageSwitcher";
+import { useT } from "./LocaleProvider";
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const t = useT();
+
+  const navLinks = [
+    { href: "#features", label: t("nav.features") },
+    { href: "#how-it-works", label: t("nav.howItWorks") },
+    { href: "#pricing", label: t("nav.pricing") },
+    { href: "#faq", label: t("nav.faq") },
+  ];
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 glass-card border-b border-white/5">
@@ -36,27 +40,33 @@ export default function Navbar() {
             ))}
           </div>
 
-          <div className="hidden md:flex items-center gap-3">
+          <div className="hidden md:flex items-center gap-2">
+            <LanguageSwitcher />
+            <ThemeToggle />
             <a
               href="/entrar"
-              className="text-sm text-text-muted hover:text-white transition-colors px-4 py-2"
+              className="text-sm text-text-muted hover:text-white transition-colors px-3 py-2"
             >
-              Entrar
+              {t("nav.signIn")}
             </a>
             <a
               href="/cadastro"
               className="text-sm bg-green-primary hover:bg-green-primary/90 text-black font-semibold px-5 py-2.5 rounded-xl transition-all hover:shadow-lg hover:shadow-green-primary/25"
             >
-              Começar grátis
+              {t("nav.startFree")}
             </a>
           </div>
 
-          <button
-            onClick={() => setMobileOpen(!mobileOpen)}
-            className="md:hidden p-2 text-text-muted"
-          >
-            {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
+          <div className="flex md:hidden items-center gap-1">
+            <LanguageSwitcher />
+            <ThemeToggle />
+            <button
+              onClick={() => setMobileOpen(!mobileOpen)}
+              className="p-2 text-text-muted"
+            >
+              {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -77,14 +87,14 @@ export default function Navbar() {
             onClick={() => setMobileOpen(false)}
             className="block text-sm text-text-muted hover:text-white transition-colors py-2 text-center"
           >
-            Entrar
+            {t("nav.signIn")}
           </a>
           <a
             href="/cadastro"
             onClick={() => setMobileOpen(false)}
             className="block text-sm bg-green-primary hover:bg-green-primary/90 text-black font-semibold px-5 py-2.5 rounded-xl text-center transition-all mt-3"
           >
-            Começar grátis
+            {t("nav.startFree")}
           </a>
         </div>
       )}

@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { ThemeProvider, themeInitScript } from "@/components/ThemeProvider";
+import { LocaleProvider } from "@/components/LocaleProvider";
 
 export const metadata: Metadata = {
-  title: "WhatsApp Bot - Atendimento Inteligente via WhatsApp",
+  title: "WhatsApp Bot - Organize seu atendimento via WhatsApp",
   description:
-    "Sistema de atendimento via WhatsApp que categoriza conversas, realiza o pré-atendimento e organiza o fluxo antes da interação humana.",
-  keywords: ["WhatsApp", "chatbot", "atendimento", "NLP", "automação"],
+    "Centralize conversas do WhatsApp, atenda em equipe de qualquer lugar e dispare mensagens automáticas. IA que responde sozinha como add-on opcional.",
+  keywords: ["WhatsApp", "atendimento", "CRM", "inbox", "automação", "chatbot", "IA"],
 };
 
 export default function RootLayout({
@@ -14,9 +16,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR" className="h-full antialiased">
+    <html lang="pt-BR" className="h-full antialiased" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body className="min-h-full flex flex-col bg-background text-foreground">
-        {children}
+        <ThemeProvider>
+          <LocaleProvider>{children}</LocaleProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
