@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { MessageCircle, Menu, X } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
@@ -21,12 +22,12 @@ export default function Navbar() {
     <nav className="fixed top-0 left-0 right-0 z-50 glass-card border-b border-white/5">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          <a href="/" className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-2">
             <div className="w-9 h-9 rounded-xl bg-green-primary/20 flex items-center justify-center">
               <MessageCircle className="w-5 h-5 text-green-primary" />
             </div>
             <span className="text-lg font-bold">WhatsApp Bot</span>
-          </a>
+          </Link>
 
           <div className="hidden md:flex items-center gap-8">
             {navLinks.map((link) => (
@@ -43,18 +44,18 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-2">
             <LanguageSwitcher />
             <ThemeToggle />
-            <a
+            <Link
               href="/entrar"
               className="text-sm text-text-muted hover:text-white transition-colors px-3 py-2"
             >
               {t("nav.signIn")}
-            </a>
-            <a
+            </Link>
+            <Link
               href="/cadastro"
               className="text-sm bg-green-primary hover:bg-green-primary/90 text-black font-semibold px-5 py-2.5 rounded-xl transition-all hover:shadow-lg hover:shadow-green-primary/25"
             >
               {t("nav.startFree")}
-            </a>
+            </Link>
           </div>
 
           <div className="flex md:hidden items-center gap-1">
@@ -82,20 +83,20 @@ export default function Navbar() {
               {link.label}
             </a>
           ))}
-          <a
+          <Link
             href="/entrar"
             onClick={() => setMobileOpen(false)}
             className="block text-sm text-text-muted hover:text-white transition-colors py-2 text-center"
           >
             {t("nav.signIn")}
-          </a>
-          <a
+          </Link>
+          <Link
             href="/cadastro"
             onClick={() => setMobileOpen(false)}
             className="block text-sm bg-green-primary hover:bg-green-primary/90 text-black font-semibold px-5 py-2.5 rounded-xl text-center transition-all mt-3"
           >
             {t("nav.startFree")}
-          </a>
+          </Link>
         </div>
       )}
     </nav>

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { MessageCircle, ArrowRight } from "lucide-react";
 import DashboardMockup from "./DashboardMockup";
 import { useT } from "./LocaleProvider";
@@ -62,13 +63,13 @@ export default function Hero() {
             </ul>
 
             <div className="flex flex-col sm:flex-row gap-4">
-              <a
+              <Link
                 href="/cadastro"
                 className="inline-flex items-center justify-center gap-2 bg-green-primary hover:bg-green-primary/90 text-black font-semibold px-7 py-3.5 rounded-xl text-base transition-all hover:shadow-lg hover:shadow-green-primary/25 hover:scale-[1.02]"
               >
                 {t("hero.cta.primary")}
                 <ArrowRight className="w-4 h-4" />
-              </a>
+              </Link>
               <a
                 href="#how-it-works"
                 className="inline-flex items-center justify-center gap-2 border border-white/10 hover:border-white/20 text-white/80 hover:text-white font-medium px-7 py-3.5 rounded-xl text-base transition-all hover:bg-white/5"

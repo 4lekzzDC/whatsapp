@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Cookie, Shield, Settings, BarChart3, ArrowRight } from "lucide-react";
 
 const cookieTypes = [
@@ -262,13 +263,13 @@ export default function CookiesContent() {
             Entre em contato conosco para mais informações sobre como usamos
             cookies.
           </p>
-          <a
+          <Link
             href="/contato"
             className="inline-flex items-center gap-2 bg-green-primary hover:bg-green-primary/90 text-black font-semibold px-8 py-3.5 rounded-xl transition-all hover:shadow-lg hover:shadow-green-primary/25 text-sm"
           >
             Falar Conosco
             <ArrowRight className="w-4 h-4" />
-          </a>
+          </Link>
         </div>
       </section>
     </>

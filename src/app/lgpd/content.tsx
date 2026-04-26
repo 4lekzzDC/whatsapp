@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {
   Shield,
   FileCheck,
@@ -233,13 +234,13 @@ export default function LgpdContent() {
             Nosso Encarregado de Proteção de Dados está disponível para
             esclarecer qualquer questão.
           </p>
-          <a
+          <Link
             href="/contato"
             className="inline-flex items-center gap-2 bg-green-primary hover:bg-green-primary/90 text-black font-semibold px-8 py-3.5 rounded-xl transition-all hover:shadow-lg hover:shadow-green-primary/25 text-sm"
           >
             Falar com o DPO
             <ArrowRight className="w-4 h-4" />
-          </a>
+          </Link>
         </div>
       </section>
     </>

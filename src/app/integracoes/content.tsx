@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {
   ArrowRight,
   ShoppingCart,
@@ -262,13 +263,13 @@ export default function IntegracoesContent() {
             Fale com nosso time e vamos construir a integração que você precisa.
             Nossa API aberta permite conectar qualquer sistema.
           </p>
-          <a
+          <Link
             href="/precos"
             className="inline-flex items-center gap-2 bg-green-primary hover:bg-green-primary/90 text-black font-semibold px-8 py-3.5 rounded-xl transition-all hover:shadow-lg hover:shadow-green-primary/25 text-sm"
           >
             Falar com Vendas
             <ArrowRight className="w-4 h-4" />
-          </a>
+          </Link>
         </div>
       </section>
     </>

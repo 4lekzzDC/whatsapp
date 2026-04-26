@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { MessageCircle } from "lucide-react";
 
 const footerLinks = {
@@ -36,12 +37,12 @@ export default function Footer() {
         <div className="grid grid-cols-2 md:grid-cols-5 gap-8 mb-12">
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
-            <a href="/" className="flex items-center gap-2 mb-4">
+            <Link href="/" className="flex items-center gap-2 mb-4">
               <div className="w-9 h-9 rounded-xl bg-green-primary/20 flex items-center justify-center">
                 <MessageCircle className="w-5 h-5 text-green-primary" />
               </div>
               <span className="text-base font-bold">WhatsApp Bot</span>
-            </a>
+            </Link>
             <p className="text-sm text-text-muted leading-relaxed">
               Automatize o atendimento via WhatsApp com inteligência artificial.
             </p>
@@ -54,12 +55,12 @@ export default function Footer() {
               <ul className="space-y-2.5">
                 {links.map((link) => (
                   <li key={link.label}>
-                    <a
+                    <Link
                       href={link.href}
                       className="text-sm text-text-muted hover:text-white transition-colors"
                     >
                       {link.label}
-                    </a>
+                    </Link>
                   </li>
                 ))}
               </ul>
@@ -73,15 +74,15 @@ export default function Footer() {
             reservados.
           </p>
           <div className="flex items-center gap-6">
-            <a href="/privacidade" className="text-xs text-text-muted hover:text-white transition-colors">
+            <Link href="/privacidade" className="text-xs text-text-muted hover:text-white transition-colors">
               Privacidade
-            </a>
-            <a href="/termos" className="text-xs text-text-muted hover:text-white transition-colors">
+            </Link>
+            <Link href="/termos" className="text-xs text-text-muted hover:text-white transition-colors">
               Termos
-            </a>
-            <a href="/lgpd" className="text-xs text-text-muted hover:text-white transition-colors">
+            </Link>
+            <Link href="/lgpd" className="text-xs text-text-muted hover:text-white transition-colors">
               LGPD
-            </a>
+            </Link>
           </div>
         </div>
       </div>

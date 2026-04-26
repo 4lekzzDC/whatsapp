@@ -1,42 +1,54 @@
-# Deploy do WhatsApp Bot
+# Deploy do FalaHub
 
-Guia passo-a-passo para colocar o painel no ar em um VPS Ubuntu 24.04 com
-domínio próprio e Cloud API oficial do WhatsApp.
+Guia passo-a-passo para colocar o painel no ar em uma VPS Ubuntu 24.04 LTS,
+servido sob `https://noratech.com.br/painel/falahub`.
 
-**Alvo deste guia:** `painel.noratech.com.br` em Hetzner/Hostinger.
+**Arquitetura:**
+
+- VPS Hostinger ouve em `app.noratech.com.br` (subdomain dedicado, A record
+  pra IP da VPS).
+- App Next.js roda na VPS com `basePath=/painel/falahub`.
+- O site institucional `noratech.com.br` (Vercel, repo separado) faz **rewrite**
+  do path `/painel/falahub/*` para `https://app.noratech.com.br/painel/falahub/*`.
+  O usuário nunca vê o subdomain — fica em `noratech.com.br/painel/falahub`.
+- Webhook do Meta vai **direto** para `app.noratech.com.br`, sem passar pelo
+  Vercel.
 
 ---
 
 ## 0. Pré-requisitos
 
-- [ ] VPS Ubuntu 24.04 com IP público (acesso root via SSH)
-- [ ] Domínio próprio (`noratech.com.br`)
-- [ ] Conta em [business.facebook.com](https://business.facebook.com)
+- [ ] VPS Ubuntu 24.04 LTS com IP público (acesso root via SSH)
+- [ ] Domínio `noratech.com.br` (DNS gerenciado em algum provedor)
+- [ ] Acesso ao repo Vercel `noratech.com.br` (pra adicionar o rewrite)
+- [ ] Conta em [business.facebook.com](https://business.facebook.com) (KYC
+      da empresa, leva 1–3 dias)
 - [ ] App criado em [developers.facebook.com](https://developers.facebook.com)
   → produto **WhatsApp** adicionado
 - [ ] Número de teste grátis do Meta (já vem junto ao criar o app)
 
 ---
 
-## 1. DNS — apontar o domínio para o VPS
+## 1. DNS — apontar `app.noratech.com.br` para a VPS
 
-Pegue o IP público do VPS e crie dois `A records`:
+Pegue o IP público da VPS e adicione um A record:
 
 | Tipo | Nome | Valor | TTL |
 |---|---|---|---|
-| A | `noratech.com.br` | `IP.DO.VPS` | 3600 |
-| A | `painel.noratech.com.br` | `IP.DO.VPS` | 3600 |
+| A | `app.noratech.com.br` | `IP.DA.VPS` | 3600 |
 
-Espere ~5 min e teste: `dig painel.noratech.com.br +short` deve retornar o IP.
+**Não mexe no `@` nem no `www`** — eles continuam apontando pro Vercel.
+
+Espere ~5 min e teste: `dig app.noratech.com.br +short` deve retornar o IP.
 
 ---
 
-## 2. Bootstrap do VPS
+## 2. Bootstrap da VPS
 
 SSH como root e rode o script:
 
 ```bash
-ssh root@IP.DO.VPS
+ssh root@IP.DA.VPS
 git clone https://github.com/4lekzzDC/whatsapp.git /tmp/whatsapp
 sudo bash /tmp/whatsapp/deploy/setup.sh
 ```
@@ -63,31 +75,39 @@ npm ci
 npm run build
 ```
 
-Rode as migrações:
+Rode as migrações (idempotente):
 
 ```bash
 psql "$DATABASE_URL" -f db/schema.sql
+```
+
+Crie o primeiro usuário admin pra conseguir logar:
+
+```bash
+npm run seed -- --email seu@email.com --name "Seu Nome" --password 'algo-forte'
 ```
 
 ---
 
 ## 4. Cloud API no Meta — credenciais
 
-Em [developers.facebook.com](https://developers.facebook.com) → seu App → **WhatsApp › API Setup**:
+Em [developers.facebook.com](https://developers.facebook.com) → seu App →
+**WhatsApp › API Setup**:
 
 1. Copie o **Phone number ID** (número de teste).
 2. Copie o **WhatsApp Business Account ID**.
 3. Clique em **Generate access token** e copie o token de **System User**
    (permanente). O token temporário de 24h não serve em produção.
 4. Em **Configurações › Básico**, revele a **Chave Secreta do App** e copie.
-5. Invente um **Verify Token** qualquer (uma string forte) — você vai usar
-   em dois lugares: no `.env` (`WHATSAPP_WEBHOOK_VERIFY_TOKEN`) e no painel
+5. Invente um **Verify Token** qualquer (string forte) — você vai usar nos
+   dois lugares: no `.env` (`WHATSAPP_WEBHOOK_VERIFY_TOKEN`) e no painel
    do Meta na hora de cadastrar o webhook.
 
 Preencha `.env`:
 
 ```env
-APP_URL=https://painel.noratech.com.br
+BASE_PATH=/painel/falahub
+APP_URL=https://noratech.com.br/painel/falahub
 JWT_SECRET=<openssl rand -hex 64>
 DATABASE_URL=postgres://whatsapp:SENHA@127.0.0.1:5432/whatsapp
 
@@ -98,6 +118,9 @@ WHATSAPP_WEBHOOK_VERIFY_TOKEN=algo_forte_que_voce_inventa
 WHATSAPP_APP_SECRET=...
 WHATSAPP_GRAPH_VERSION=v21.0
 ```
+
+> **Importante:** `BASE_PATH` é lido em build time. Se você alterar, é
+> obrigatório rodar `npm run build` de novo.
 
 ---
 
@@ -118,25 +141,74 @@ Neste ponto o app está ouvindo em `127.0.0.1:3000` (não exposto ainda).
 Como root:
 
 ```bash
-cp /home/app/whatsapp/deploy/nginx.noratech.conf.example \
-   /etc/nginx/sites-available/painel.noratech.com.br
-ln -s /etc/nginx/sites-available/painel.noratech.com.br \
+cp /home/app/whatsapp/deploy/nginx.example.conf \
+   /etc/nginx/sites-available/app.noratech.com.br
+ln -s /etc/nginx/sites-available/app.noratech.com.br \
       /etc/nginx/sites-enabled/
 nginx -t
 systemctl reload nginx
 
-certbot --nginx -d painel.noratech.com.br
+certbot --nginx -d app.noratech.com.br
 ```
 
-Acesse `https://painel.noratech.com.br` — deve carregar a tela de login.
+Teste direto: `curl -I https://app.noratech.com.br/painel/falahub/` deve
+retornar 200.
 
 ---
 
-## 7. Webhook no Meta
+## 7. Vercel rewrite no `noratech.com.br`
 
-Volte ao painel do App no Meta → **WhatsApp › Configuration › Webhook**:
+No repo **separado** do site institucional (que está hospedado no Vercel),
+edite `next.config.ts` (ou crie um `vercel.json`):
 
-- **Callback URL:** `https://painel.noratech.com.br/api/webhooks/whatsapp`
+**Opção A — `next.config.ts`:**
+
+```ts
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+  async rewrites() {
+    return [
+      {
+        source: "/painel/falahub/:path*",
+        destination: "https://app.noratech.com.br/painel/falahub/:path*",
+      },
+    ];
+  },
+};
+
+export default nextConfig;
+```
+
+**Opção B — `vercel.json`:**
+
+```json
+{
+  "rewrites": [
+    {
+      "source": "/painel/falahub/:path*",
+      "destination": "https://app.noratech.com.br/painel/falahub/:path*"
+    }
+  ]
+}
+```
+
+Commit + push. O Vercel faz redeploy sozinho. Depois teste:
+
+```bash
+curl -I https://noratech.com.br/painel/falahub/
+# Deve responder 200 (mesmo header X-Powered-By: Next.js que vem da VPS)
+```
+
+---
+
+## 8. Webhook no Meta
+
+Painel do App no Meta → **WhatsApp › Configuration › Webhook**:
+
+- **Callback URL:** `https://app.noratech.com.br/painel/falahub/api/webhooks/whatsapp`
+  > URL **direta da VPS**, sem o `noratech.com.br`. Webhooks são
+  > server-to-server e ganham confiabilidade evitando o proxy do Vercel.
 - **Verify token:** o mesmo que você pôs em `WHATSAPP_WEBHOOK_VERIFY_TOKEN`
 - Clique em **Verify and save** — se der 200, tá ligado.
 
@@ -145,14 +217,14 @@ assine o evento `messages`.
 
 ---
 
-## 8. Primeiro teste
+## 9. Primeiro teste
 
 Ainda em **API Setup**, adicione seu próprio número na seção
 **To: Add phone number** (o Meta precisa aprovar com um código por SMS
 que ele te envia).
 
 Mande uma mensagem qualquer do seu WhatsApp pessoal para o número de teste.
-No VPS:
+Na VPS:
 
 ```bash
 pm2 logs whatsapp-bot
@@ -161,9 +233,24 @@ pm2 logs whatsapp-bot
 Você deve ver `[webhook] N eventos recebidos`. Isso prova que todo o caminho
 `WhatsApp → Meta → webhook → seu app` está funcionando.
 
+Para conferir o payload bruto persistido:
+
+```bash
+psql "$DATABASE_URL" -c \
+  "SELECT created_at, payload->'entry' FROM webhook_events ORDER BY created_at DESC LIMIT 1;"
+```
+
+Para acessar o painel pelo browser:
+
+```
+https://noratech.com.br/painel/falahub/entrar
+```
+
+Logue com o usuário criado no `npm run seed`.
+
 ---
 
-## 9. Rotina de operação
+## 10. Rotina de operação
 
 **Atualizar app após push novo:**
 
@@ -202,13 +289,20 @@ pm2 logs whatsapp-bot --lines 200
 | "Graph API 190" nos logs | Access token expirou ou foi revogado | Gere novo token de System User |
 | Webhook salva 200 mas nada aparece na UI | Processamento ainda é mock (próxima fase) | Normal neste estágio |
 | `ECONNREFUSED 5432` | Postgres não subiu | `systemctl status postgresql` |
+| `noratech.com.br/painel/falahub` dá 404 | Rewrite Vercel ainda não subiu | Confirma deploy do site institucional |
+| Login pelo Vercel funciona mas painel some | Cookie do BASE_PATH não está chegando | Confere `Path=/painel/falahub` no DevTools |
+| Acessou `app.noratech.com.br` direto e fez login | Cookie fica preso no subdomain, não vai pro `noratech.com.br` | Sempre acesse pela URL canônica `noratech.com.br/painel/falahub` |
 
 ---
 
 ## Próximas fases (já codadas parcialmente, faltam ligar)
 
-- [ ] Autenticação real (bcrypt + JWT) — substitui o cookie stub
-- [ ] Persistência real dos tickets/mensagens no banco
+- [ ] Autenticação real (bcrypt + JWT) — substitui o cookie stub atual
+- [ ] Persistência granular dos tickets/mensagens no banco (hoje só
+      `webhook_events` é gravado)
 - [ ] SSE para atualização em tempo real do painel
 - [ ] Upload e download de mídia via `graph.facebook.com/<media_id>`
 - [ ] Templates: cache local + envio em campanhas
+- [ ] Provider rename: `WhatsAppProvider` → `MessagingProvider` + adapters
+      Instagram (Graph API) e Telegram (Bot API). Schema já suporta via
+      `connections.provider`.

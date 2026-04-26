@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {
   ArrowRight,
   Target,
@@ -262,19 +263,19 @@ export default function SobreContent() {
             com o WhatsApp Bot.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <a
+            <Link
               href="/precos"
               className="inline-flex items-center gap-2 bg-green-primary hover:bg-green-primary/90 text-black font-semibold px-8 py-3.5 rounded-xl transition-all hover:shadow-lg hover:shadow-green-primary/25 text-sm"
             >
               Começar Grátis
               <ArrowRight className="w-4 h-4" />
-            </a>
-            <a
+            </Link>
+            <Link
               href="/contato"
               className="inline-flex items-center gap-2 border border-white/10 text-white hover:bg-white/5 hover:border-white/20 font-semibold px-8 py-3.5 rounded-xl transition-all text-sm"
             >
               Falar com o Time
-            </a>
+            </Link>
           </div>
         </div>
       </section>

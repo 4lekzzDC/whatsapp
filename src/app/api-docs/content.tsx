@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {
   Code,
   Key,
@@ -131,12 +132,12 @@ export default function ApiContent() {
               <Terminal className="w-4 h-4" />
               Obter API Key
             </a>
-            <a
+            <Link
               href="/documentacao"
               className="inline-flex items-center gap-2 border border-white/10 text-white hover:bg-white/5 hover:border-white/20 font-semibold px-8 py-3.5 rounded-xl transition-all text-sm"
             >
               Ver Documentação
-            </a>
+            </Link>
           </div>
         </div>
       </section>
@@ -247,13 +248,13 @@ export default function ApiContent() {
             Crie sua conta gratuita e comece a usar a API em minutos. Sem
             cartão de crédito.
           </p>
-          <a
+          <Link
             href="/precos"
             className="inline-flex items-center gap-2 bg-green-primary hover:bg-green-primary/90 text-black font-semibold px-8 py-3.5 rounded-xl transition-all hover:shadow-lg hover:shadow-green-primary/25 text-sm"
           >
             Começar Grátis
             <ArrowRight className="w-4 h-4" />
-          </a>
+          </Link>
         </div>
       </section>
     </>

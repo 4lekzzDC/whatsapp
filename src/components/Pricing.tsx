@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Check, Sparkles } from "lucide-react";
 import { useT } from "./LocaleProvider";
 
@@ -116,7 +117,7 @@ export default function Pricing() {
                 ))}
               </ul>
 
-              <a
+              <Link
                 href="/cadastro"
                 className={`w-full text-center py-3 rounded-xl font-semibold text-sm transition-all ${
                   plan.popular
@@ -125,7 +126,7 @@ export default function Pricing() {
                 }`}
               >
                 {plan.cta}
-              </a>
+              </Link>
             </div>
           ))}
         </div>
@@ -171,13 +172,13 @@ export default function Pricing() {
                     {t("pricing.aiAddon.period")}
                   </span>
                 </div>
-                <a
+                <Link
                   href="/cadastro"
                   className="inline-flex items-center gap-2 bg-accent-purple hover:bg-accent-purple/90 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-all hover:shadow-lg hover:shadow-accent-purple/25"
                 >
                   <Sparkles className="w-4 h-4" />
                   {t("pricing.aiAddon.cta")}
-                </a>
+                </Link>
               </div>
             </div>
           </div>
