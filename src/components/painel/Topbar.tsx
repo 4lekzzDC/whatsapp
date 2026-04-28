@@ -15,7 +15,7 @@ import {
   User,
   Settings,
 } from "lucide-react";
-import { sair } from "@/app/entrar/actions";
+import { sair } from "@/app/painel/actions";
 import { useUser } from "./UserProvider";
 
 const sections = [

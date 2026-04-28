@@ -1,7 +1,6 @@
 "use client";
 
 import { BookOpen, MessageCircle, Mail, Play, FileText } from "lucide-react";
-import Link from "next/link";
 import Topbar from "@/components/painel/Topbar";
 import PageHeader from "@/components/painel/PageHeader";
 
@@ -52,9 +51,9 @@ export default function AjudaPage() {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Link href="/contato" className="inline-flex items-center gap-2 border border-white/10 hover:border-white/20 text-white/80 text-sm px-3 py-2 rounded-lg">
+            <a href="mailto:contato@noratech.com.br" className="inline-flex items-center gap-2 border border-white/10 hover:border-white/20 text-white/80 text-sm px-3 py-2 rounded-lg">
               <Mail className="w-4 h-4" /> E-mail
-            </Link>
+            </a>
             <button className="inline-flex items-center gap-2 bg-green-primary hover:bg-green-primary/90 text-black font-semibold px-4 py-2 rounded-lg text-sm">
               <MessageCircle className="w-4 h-4" /> Abrir chat
             </button>

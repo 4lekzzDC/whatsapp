@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
 import Sidebar from "@/components/painel/Sidebar";
 import { UserProvider } from "@/components/painel/UserProvider";
-import { getSession } from "@/lib/session";
+import { requireFalahubAccess } from "@/lib/session";
 
 export const metadata: Metadata = {
   title: "Painel — WhatsApp Bot",
@@ -24,8 +23,7 @@ export default async function PainelLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await getSession();
-  if (!session) redirect("/entrar");
+  const session = await requireFalahubAccess("/painel/atendimentos");
 
   const user = {
     name: session.name,

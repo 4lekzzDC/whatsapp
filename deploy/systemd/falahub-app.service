@@ -1,0 +1,26 @@
+[Unit]
+Description=Falahub Next.js app
+After=network.target
+
+[Service]
+Type=simple
+User=falahub
+Group=falahub
+WorkingDirectory=/srv/falahub/current
+EnvironmentFile=/srv/falahub/shared/.env
+Environment=NODE_ENV=production
+Environment=PORT=3000
+Environment=HOSTNAME=127.0.0.1
+ExecStart=/usr/bin/node server.js
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/srv/falahub
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

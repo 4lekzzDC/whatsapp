@@ -1,19 +1,20 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { SESSION_COOKIE } from "@/lib/session";
+
+const NORATECH_URL = process.env.NEXT_PUBLIC_NORATECH_URL || "https://noratech.com.br";
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://falahub.noratech.com.br";
 
 export function proxy(request: NextRequest) {
-  const session = request.cookies.get(SESSION_COOKIE);
-  const { pathname } = request.nextUrl;
+  const hasSession = request.cookies
+    .getAll()
+    .some((c) => c.name.startsWith("sb-") && c.name.endsWith("-auth-token"));
 
-  if (!session) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/entrar";
-    url.searchParams.set("redirect", pathname);
-    return NextResponse.redirect(url);
-  }
+  if (hasSession) return NextResponse.next();
 
-  return NextResponse.next();
+  const back = `${APP_URL}${request.nextUrl.pathname}${request.nextUrl.search}`;
+  const url = new URL(`${NORATECH_URL}/entrar`);
+  url.searchParams.set("next", back);
+  return NextResponse.redirect(url);
 }
 
 export const config = {
