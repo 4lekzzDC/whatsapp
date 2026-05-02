@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
 import { getSupabaseServer } from "@/lib/supabase/server";
-import { createInstance, connectInstance, mapState, getConnectionState } from "@/lib/evolution";
+import {
+  createInstance,
+  connectInstance,
+  mapState,
+  getConnectionState,
+  setWebhook,
+} from "@/lib/evolution";
 
 export const dynamic = "force-dynamic";
 
@@ -63,16 +69,32 @@ export async function POST(req: Request) {
 
   let qrBase64: string | null = null;
   try {
-    const created = await createInstance({
-      instanceName,
-      webhookUrl: `${APP_URL}/api/whatsapp/webhook`,
-      webhookByEvents: false,
-      events: ["QRCODE_UPDATED", "CONNECTION_UPDATE", "MESSAGES_UPSERT"],
-    });
+    const created = await createInstance({ instanceName });
     qrBase64 = created.qrcode?.base64 ?? null;
-    if (!qrBase64) {
-      const cn = await connectInstance(instanceName);
-      qrBase64 = cn.base64 ?? null;
+
+    // Register the webhook AFTER creation (v2.2.x requires a separate call).
+    // Best-effort: if it fails, the instance still exists and we'll fall back
+    // to polling in the UI.
+    try {
+      await setWebhook(instanceName, {
+        url: `${APP_URL}/api/whatsapp/webhook`,
+        byEvents: false,
+        base64: true,
+      });
+    } catch {
+      // ignore — webhook can be reconfigured later
+    }
+
+    // The QR may not be ready in the create response; poll /instance/connect
+    // a couple of times before giving up (UI will keep polling anyway).
+    for (let i = 0; i < 3 && !qrBase64; i++) {
+      await new Promise((r) => setTimeout(r, 800));
+      try {
+        const cn = await connectInstance(instanceName);
+        qrBase64 = cn.base64 ?? null;
+      } catch {
+        // keep trying
+      }
     }
   } catch (e) {
     const msg = e instanceof Error ? e.message : "evolution error";

@@ -68,30 +68,37 @@ export function evolutionConfigured(): boolean {
 
 export async function createInstance(params: {
   instanceName: string;
-  webhookUrl?: string;
-  webhookByEvents?: boolean;
-  events?: string[];
 }): Promise<CreateInstanceResponse> {
+  // v2.2.x: webhook config moved to a separate endpoint. Sending it here
+  // crashes the API with "Cannot read properties of undefined (reading 'length')".
   return request<CreateInstanceResponse>("/instance/create", {
     method: "POST",
     body: {
       instanceName: params.instanceName,
       qrcode: true,
       integration: "WHATSAPP-BAILEYS",
-      ...(params.webhookUrl
-        ? {
-            webhook: {
-              url: params.webhookUrl,
-              byEvents: params.webhookByEvents ?? false,
-              base64: true,
-              events: params.events ?? [
-                "QRCODE_UPDATED",
-                "CONNECTION_UPDATE",
-                "MESSAGES_UPSERT",
-              ],
-            },
-          }
-        : {}),
+    },
+  });
+}
+
+export async function setWebhook(
+  instanceName: string,
+  params: {
+    url: string;
+    events?: string[];
+    byEvents?: boolean;
+    base64?: boolean;
+  },
+): Promise<unknown> {
+  // v2.2.x payload: { enabled, url, webhookByEvents, webhookBase64, events }
+  return request(`/webhook/set/${encodeURIComponent(instanceName)}`, {
+    method: "POST",
+    body: {
+      enabled: true,
+      url: params.url,
+      webhookByEvents: params.byEvents ?? false,
+      webhookBase64: params.base64 ?? true,
+      events: params.events ?? ["QRCODE_UPDATED", "CONNECTION_UPDATE", "MESSAGES_UPSERT"],
     },
   });
 }
