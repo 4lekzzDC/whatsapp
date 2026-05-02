@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Smartphone,
   Plus,
@@ -12,55 +12,28 @@ import {
   WifiOff,
   CheckCircle2,
   AlertCircle,
-  Copy,
   X,
+  Loader2,
 } from "lucide-react";
 import Topbar from "@/components/painel/Topbar";
 import PageHeader from "@/components/painel/PageHeader";
 
-type ConnStatus = "connected" | "disconnected" | "qr";
+type ConnStatus = "connected" | "connecting" | "disconnected" | "qr";
 
-const initialConnections: {
-  id: number;
+type Connection = {
+  id: string;
   name: string;
-  phone: string;
-  sector: string;
+  instance_name: string;
+  sector_id: string | null;
+  phone: string | null;
   status: ConnStatus;
-  battery: number;
-  messages: number;
-  lastSeen: string;
-}[] = [
-  {
-    id: 1,
-    name: "itamarathy 1",
-    phone: "+55 51 9 9876-5432",
-    sector: "Comercial",
-    status: "connected",
-    battery: 78,
-    messages: 1482,
-    lastSeen: "agora",
-  },
-  {
-    id: 2,
-    name: "itamarathy 2",
-    phone: "+55 51 9 1234-0000",
-    sector: "Suporte",
-    status: "connected",
-    battery: 54,
-    messages: 923,
-    lastSeen: "agora",
-  },
-  {
-    id: 3,
-    name: "Financeiro",
-    phone: "+55 51 9 7777-1111",
-    sector: "Financeiro",
-    status: "disconnected",
-    battery: 0,
-    messages: 210,
-    lastSeen: "há 12 min",
-  },
-];
+  last_seen_at: string | null;
+  messages_count: number;
+  battery: number | null;
+  created_at: string;
+};
+
+type Sector = { id: string; name: string; color: string | null };
 
 function statusBadge(status: ConnStatus) {
   switch (status) {
@@ -68,6 +41,12 @@ function statusBadge(status: ConnStatus) {
       return (
         <span className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full bg-green-primary/15 text-green-primary">
           <CheckCircle2 className="w-3.5 h-3.5" /> Conectado
+        </span>
+      );
+    case "connecting":
+      return (
+        <span className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full bg-accent-blue/15 text-accent-blue">
+          <Loader2 className="w-3.5 h-3.5 animate-spin" /> Conectando
         </span>
       );
     case "disconnected":
@@ -85,9 +64,77 @@ function statusBadge(status: ConnStatus) {
   }
 }
 
+function relTime(iso: string | null): string {
+  if (!iso) return "—";
+  const diff = Date.now() - new Date(iso).getTime();
+  if (diff < 60_000) return "agora";
+  const min = Math.floor(diff / 60_000);
+  if (min < 60) return `há ${min} min`;
+  const h = Math.floor(min / 60);
+  if (h < 24) return `há ${h} h`;
+  return new Date(iso).toLocaleDateString("pt-BR");
+}
+
 export default function WhatsAppPage() {
-  const [connections] = useState(initialConnections);
-  const [showQr, setShowQr] = useState(false);
+  const [connections, setConnections] = useState<Connection[]>([]);
+  const [sectors, setSectors] = useState<Sector[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [showNew, setShowNew] = useState(false);
+  const [qrFor, setQrFor] = useState<Connection | null>(null);
+
+  const refresh = useCallback(async () => {
+    try {
+      const [r1, r2] = await Promise.all([
+        fetch("/api/whatsapp/instances", { cache: "no-store" }),
+        fetch("/api/whatsapp/sectors", { cache: "no-store" }),
+      ]);
+      if (!r1.ok) throw new Error((await r1.json()).error || "Erro ao listar conexões");
+      const d1 = await r1.json();
+      setConnections(d1.connections ?? []);
+      if (r2.ok) {
+        const d2 = await r2.json();
+        setSectors(d2.sectors ?? []);
+      }
+      setError(null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Erro inesperado");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    refresh();
+    const t = setInterval(refresh, 15_000);
+    return () => clearInterval(t);
+  }, [refresh]);
+
+  async function handleDelete(c: Connection) {
+    if (!confirm(`Excluir a conexão "${c.name}"? Essa ação desconecta o WhatsApp.`)) return;
+    const r = await fetch(`/api/whatsapp/instances/${c.id}`, { method: "DELETE" });
+    if (!r.ok) {
+      alert("Falha ao excluir.");
+      return;
+    }
+    refresh();
+  }
+
+  async function handleLogout(c: Connection) {
+    const r = await fetch(`/api/whatsapp/instances/${c.id}/logout`, { method: "POST" });
+    if (!r.ok) alert("Falha ao desconectar.");
+    refresh();
+  }
+
+  async function handleRestart(c: Connection) {
+    const r = await fetch(`/api/whatsapp/instances/${c.id}/restart`, { method: "POST" });
+    if (!r.ok) alert("Falha ao reiniciar.");
+    refresh();
+  }
+
+  const active = connections.filter((c) => c.status === "connected").length;
+  const offline = connections.filter((c) => c.status === "disconnected").length;
+  const totalMsgs = connections.reduce((s, c) => s + (c.messages_count || 0), 0);
 
   return (
     <>
@@ -99,7 +146,7 @@ export default function WhatsAppPage() {
           description="Conecte seus números do WhatsApp escaneando o QR Code. Cada conexão pode ser vinculada a um setor."
           actions={
             <button
-              onClick={() => setShowQr(true)}
+              onClick={() => setShowNew(true)}
               className="inline-flex items-center gap-2 bg-green-primary hover:bg-green-primary/90 text-black font-semibold px-4 py-2 rounded-lg text-sm"
             >
               <Plus className="w-4 h-4" /> Nova conexão
@@ -107,16 +154,19 @@ export default function WhatsAppPage() {
           }
         />
 
+        {error && (
+          <div className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 text-red-300 px-4 py-3 text-sm">
+            {error}
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           {[
-            { label: "Conexões ativas", value: "2", icon: Wifi, color: "text-green-primary" },
-            { label: "Mensagens hoje", value: "2.615", icon: Smartphone, color: "text-accent-blue" },
-            { label: "Desconectadas", value: "1", icon: WifiOff, color: "text-red-400" },
+            { label: "Conexões ativas", value: String(active), icon: Wifi, color: "text-green-primary" },
+            { label: "Mensagens", value: totalMsgs.toLocaleString("pt-BR"), icon: Smartphone, color: "text-accent-blue" },
+            { label: "Desconectadas", value: String(offline), icon: WifiOff, color: "text-red-400" },
           ].map((s) => (
-            <div
-              key={s.label}
-              className="glass-card rounded-xl p-5 flex items-center justify-between"
-            >
+            <div key={s.label} className="glass-card rounded-xl p-5 flex items-center justify-between">
               <div>
                 <p className="text-xs text-text-muted">{s.label}</p>
                 <p className={`text-2xl font-bold mt-1 ${s.color}`}>{s.value}</p>
@@ -129,78 +179,89 @@ export default function WhatsAppPage() {
         <div className="glass-card rounded-xl overflow-hidden">
           <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between">
             <h2 className="text-sm font-semibold">Suas conexões</h2>
-            <p className="text-xs text-text-muted">{connections.length} no total</p>
+            <p className="text-xs text-text-muted">
+              {loading ? "Carregando…" : `${connections.length} no total`}
+            </p>
           </div>
+
+          {connections.length === 0 && !loading && (
+            <div className="px-5 py-10 text-center text-sm text-text-muted">
+              Nenhuma conexão ainda. Clique em <strong>Nova conexão</strong> para criar a primeira.
+            </div>
+          )}
+
           <div className="divide-y divide-white/5">
-            {connections.map((c) => (
-              <div
-                key={c.id}
-                className="px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-4"
-              >
+            {connections.map((c) => {
+              const sectorName = sectors.find((s) => s.id === c.sector_id)?.name ?? "—";
+              return (
                 <div
-                  className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${
-                    c.status === "connected"
-                      ? "bg-green-primary/15 text-green-primary"
-                      : "bg-white/5 text-text-muted"
-                  }`}
+                  key={c.id}
+                  className="px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-4"
                 >
-                  <Smartphone className="w-5 h-5" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <p className="font-semibold text-sm">{c.name}</p>
-                    {statusBadge(c.status)}
+                  <div
+                    className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${
+                      c.status === "connected"
+                        ? "bg-green-primary/15 text-green-primary"
+                        : "bg-white/5 text-text-muted"
+                    }`}
+                  >
+                    <Smartphone className="w-5 h-5" />
                   </div>
-                  <p className="text-xs text-text-muted mt-0.5 font-mono">
-                    {c.phone} · Setor: {c.sector}
-                  </p>
-                </div>
-                <div className="hidden md:grid grid-cols-3 gap-4 text-center text-xs">
-                  <div>
-                    <p className="text-text-muted">Bateria</p>
-                    <p className="font-semibold">{c.battery}%</p>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="font-semibold text-sm">{c.name}</p>
+                      {statusBadge(c.status)}
+                    </div>
+                    <p className="text-xs text-text-muted mt-0.5 font-mono">
+                      {c.phone || "número não vinculado"} · Setor: {sectorName}
+                    </p>
                   </div>
-                  <div>
-                    <p className="text-text-muted">Mensagens</p>
-                    <p className="font-semibold">{c.messages}</p>
+                  <div className="hidden md:grid grid-cols-2 gap-4 text-center text-xs">
+                    <div>
+                      <p className="text-text-muted">Mensagens</p>
+                      <p className="font-semibold">{c.messages_count.toLocaleString("pt-BR")}</p>
+                    </div>
+                    <div>
+                      <p className="text-text-muted">Visto</p>
+                      <p className="font-semibold">{relTime(c.last_seen_at)}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-text-muted">Visto</p>
-                    <p className="font-semibold">{c.lastSeen}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-1">
-                  {c.status === "disconnected" ? (
+                  <div className="flex items-center gap-1">
+                    {c.status !== "connected" ? (
+                      <button
+                        onClick={() => setQrFor(c)}
+                        className="p-2 rounded-lg hover:bg-white/[0.04] text-green-primary"
+                        title="Conectar / ver QR"
+                      >
+                        <QrCode className="w-4 h-4" />
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleRestart(c)}
+                        className="p-2 rounded-lg hover:bg-white/[0.04] text-text-muted hover:text-white"
+                        title="Reiniciar"
+                      >
+                        <RefreshCw className="w-4 h-4" />
+                      </button>
+                    )}
                     <button
-                      onClick={() => setShowQr(true)}
-                      className="p-2 rounded-lg hover:bg-white/[0.04] text-green-primary"
-                      title="Reconectar"
-                    >
-                      <QrCode className="w-4 h-4" />
-                    </button>
-                  ) : (
-                    <button
+                      onClick={() => handleLogout(c)}
                       className="p-2 rounded-lg hover:bg-white/[0.04] text-text-muted hover:text-white"
-                      title="Reiniciar"
+                      title="Desconectar"
                     >
-                      <RefreshCw className="w-4 h-4" />
+                      <Power className="w-4 h-4" />
                     </button>
-                  )}
-                  <button
-                    className="p-2 rounded-lg hover:bg-white/[0.04] text-text-muted hover:text-white"
-                    title="Desligar"
-                  >
-                    <Power className="w-4 h-4" />
-                  </button>
-                  <button
-                    className="p-2 rounded-lg hover:bg-red-500/10 text-red-400"
-                    title="Excluir"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                    <button
+                      onClick={() => handleDelete(c)}
+                      className="p-2 rounded-lg hover:bg-red-500/10 text-red-400"
+                      title="Excluir"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
@@ -215,12 +276,157 @@ export default function WhatsAppPage() {
         </div>
       </main>
 
-      {showQr && <QrModal onClose={() => setShowQr(false)} />}
+      {showNew && (
+        <NewConnectionModal
+          sectors={sectors}
+          onClose={() => setShowNew(false)}
+          onCreated={(conn) => {
+            setShowNew(false);
+            refresh();
+            setQrFor(conn);
+          }}
+        />
+      )}
+
+      {qrFor && (
+        <QrModal
+          connection={qrFor}
+          onClose={() => {
+            setQrFor(null);
+            refresh();
+          }}
+          onConnected={() => {
+            refresh();
+          }}
+        />
+      )}
     </>
   );
 }
 
-function QrModal({ onClose }: { onClose: () => void }) {
+function NewConnectionModal({
+  sectors,
+  onClose,
+  onCreated,
+}: {
+  sectors: Sector[];
+  onClose: () => void;
+  onCreated: (c: Connection) => void;
+}) {
+  const [name, setName] = useState("");
+  const [sectorId, setSectorId] = useState<string>("");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!name.trim()) return;
+    setBusy(true);
+    setErr(null);
+    try {
+      const r = await fetch("/api/whatsapp/instances", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ name: name.trim(), sector_id: sectorId || null }),
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || "Falha ao criar conexão");
+      onCreated(d.connection as Connection);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Erro inesperado");
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <form onSubmit={submit} className="glass-card rounded-2xl max-w-md w-full p-6 border border-white/10 relative">
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute top-3 right-3 p-1.5 rounded-lg hover:bg-white/[0.04] text-text-muted"
+        >
+          <X className="w-5 h-5" />
+        </button>
+        <h3 className="text-lg font-bold mb-1">Nova conexão</h3>
+        <p className="text-sm text-text-muted mb-5">Dê um nome e (opcional) vincule a um setor.</p>
+
+        <label className="text-xs text-text-muted">Nome</label>
+        <input
+          autoFocus
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Ex.: Atendimento Comercial"
+          className="w-full bg-white/[0.04] border border-white/[0.06] rounded-lg px-3 py-2 text-sm mb-3"
+        />
+
+        <label className="text-xs text-text-muted">Setor</label>
+        <select
+          value={sectorId}
+          onChange={(e) => setSectorId(e.target.value)}
+          className="w-full bg-white/[0.04] border border-white/[0.06] rounded-lg px-3 py-2 text-sm mb-4"
+        >
+          <option value="">— Sem setor —</option>
+          {sectors.map((s) => (
+            <option key={s.id} value={s.id}>{s.name}</option>
+          ))}
+        </select>
+
+        {err && <p className="text-sm text-red-400 mb-3">{err}</p>}
+
+        <button
+          type="submit"
+          disabled={busy || !name.trim()}
+          className="w-full bg-green-primary hover:bg-green-primary/90 disabled:opacity-50 text-black font-semibold px-4 py-2 rounded-lg text-sm inline-flex items-center justify-center gap-2"
+        >
+          {busy && <Loader2 className="w-4 h-4 animate-spin" />} Criar e gerar QR
+        </button>
+      </form>
+    </div>
+  );
+}
+
+function QrModal({
+  connection,
+  onClose,
+  onConnected,
+}: {
+  connection: Connection;
+  onClose: () => void;
+  onConnected: () => void;
+}) {
+  const [qr, setQr] = useState<string | null>(null);
+  const [status, setStatus] = useState<ConnStatus>(connection.status);
+  const [err, setErr] = useState<string | null>(null);
+  const stop = useRef(false);
+
+  useEffect(() => {
+    stop.current = false;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    async function tick() {
+      if (stop.current) return;
+      try {
+        const r = await fetch(`/api/whatsapp/instances/${connection.id}/qr`, { cache: "no-store" });
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.error || "Falha ao obter QR");
+        setQr(d.qr ?? null);
+        setStatus(d.status as ConnStatus);
+        if (d.status === "connected") {
+          onConnected();
+          return;
+        }
+      } catch (e) {
+        setErr(e instanceof Error ? e.message : "Erro inesperado");
+      }
+      timer = setTimeout(tick, 3000);
+    }
+    tick();
+    return () => {
+      stop.current = true;
+      if (timer) clearTimeout(timer);
+    };
+  }, [connection.id, onConnected]);
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
       <div className="glass-card rounded-2xl max-w-md w-full p-6 border border-white/10 relative">
@@ -230,80 +436,58 @@ function QrModal({ onClose }: { onClose: () => void }) {
         >
           <X className="w-5 h-5" />
         </button>
-        <h3 className="text-lg font-bold mb-1">Escaneie o QR Code</h3>
+        <h3 className="text-lg font-bold mb-1">{connection.name}</h3>
         <p className="text-sm text-text-muted mb-5">
           Abra o WhatsApp › Aparelhos conectados › Conectar aparelho.
         </p>
 
-        <div className="aspect-square bg-white rounded-xl p-4 flex items-center justify-center mb-4 relative">
-          <FakeQr />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-14 h-14 rounded-xl bg-green-primary flex items-center justify-center">
-              <svg viewBox="0 0 24 24" className="w-8 h-8 text-white" fill="currentColor">
-                <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.76.46 3.45 1.32 4.95L2 22l5.25-1.38c1.45.79 3.08 1.21 4.79 1.21 5.46 0 9.91-4.45 9.91-9.92C22 6.45 17.54 2 12.04 2z" />
-              </svg>
+        <div className="aspect-square bg-white rounded-xl p-4 flex items-center justify-center mb-4 relative overflow-hidden">
+          {status === "connected" ? (
+            <div className="text-center text-green-primary">
+              <CheckCircle2 className="w-16 h-16 mx-auto" />
+              <p className="font-semibold mt-2 text-black">Conectado!</p>
             </div>
-          </div>
+          ) : qr ? (
+            // Evolution returns a data URL or raw base64; normalize
+            <img
+              src={qr.startsWith("data:") ? qr : `data:image/png;base64,${qr}`}
+              alt="QR Code"
+              className="w-full h-full object-contain"
+            />
+          ) : (
+            <div className="flex flex-col items-center gap-2 text-text-muted">
+              <Loader2 className="w-6 h-6 animate-spin" />
+              <span className="text-xs">Gerando QR…</span>
+            </div>
+          )}
         </div>
 
-        <div className="flex items-center gap-2 mb-4">
+        <div className="flex items-center gap-2 mb-1">
           <div className="flex-1 text-xs text-text-muted flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-accent-yellow animate-pulse" />
-            Aguardando leitura — expira em 00:42
+            <span
+              className={`w-2 h-2 rounded-full ${
+                status === "connected" ? "bg-green-primary" : "bg-accent-yellow animate-pulse"
+              }`}
+            />
+            {status === "connected"
+              ? "Sessão ativa."
+              : status === "connecting"
+              ? "Conectando…"
+              : "Aguardando leitura — QR atualiza automaticamente."}
           </div>
-          <button className="text-xs text-green-primary hover:underline flex items-center gap-1">
-            <RefreshCw className="w-3 h-3" /> Gerar novo
+        </div>
+
+        {err && <p className="text-xs text-red-400 mt-2">{err}</p>}
+
+        {status === "connected" && (
+          <button
+            onClick={onClose}
+            className="mt-4 w-full bg-green-primary hover:bg-green-primary/90 text-black font-semibold px-4 py-2 rounded-lg text-sm"
+          >
+            Fechar
           </button>
-        </div>
-
-        <div className="border-t border-white/5 pt-4">
-          <p className="text-xs text-text-muted mb-2">Ou vincule com código:</p>
-          <div className="flex items-center gap-2">
-            <code className="flex-1 bg-white/[0.04] border border-white/[0.06] rounded-lg px-3 py-2 text-sm font-mono tracking-widest">
-              WB23-KP9M-77FX
-            </code>
-            <button className="p-2 rounded-lg hover:bg-white/[0.04] text-text-muted hover:text-white">
-              <Copy className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
+        )}
       </div>
-    </div>
-  );
-}
-
-function FakeQr() {
-  // Deterministic pseudo-random pattern so it looks like a QR code without being one.
-  const cells: boolean[] = [];
-  let seed = 9301;
-  for (let i = 0; i < 21 * 21; i++) {
-    seed = (seed * 9301 + 49297) % 233280;
-    cells.push(seed / 233280 > 0.5);
-  }
-  return (
-    <div className="grid grid-cols-21 gap-0 w-full h-full" style={{ gridTemplateColumns: "repeat(21, 1fr)" }}>
-      {cells.map((on, i) => {
-        const row = Math.floor(i / 21);
-        const col = i % 21;
-        const inFinder =
-          (row < 7 && col < 7) ||
-          (row < 7 && col > 13) ||
-          (row > 13 && col < 7);
-        const finderBlack =
-          inFinder &&
-          (row === 0 || row === 6 || col === 0 || col === 6 ||
-            (row >= 2 && row <= 4 && col >= 2 && col <= 4) ||
-            (row >= 14 && row <= 20 && col === 0) || (row >= 14 && row <= 20 && col === 6) ||
-            (col >= 14 && col <= 20 && row === 0) || (col >= 14 && col <= 20 && row === 6));
-        const fill = inFinder ? finderBlack : on;
-        return (
-          <div
-            key={i}
-            className={fill ? "bg-black" : "bg-white"}
-            style={{ aspectRatio: "1 / 1" }}
-          />
-        );
-      })}
     </div>
   );
 }
